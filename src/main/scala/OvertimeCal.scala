@@ -1,6 +1,6 @@
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.{col, initcap, when}
+import org.apache.spark.sql.functions.{col, collect_list, initcap, when}
 
 object OvertimeCal {
 
@@ -25,12 +25,12 @@ object OvertimeCal {
       ("nishad", 60)
     ).toDF("name", "hours_worked")
 
-    val df=employees.select(initcap(col("name")),
+    val df=employees.select(initcap(col("name")).alias("name"),
       when(col("hours_worked")>60,"Excessive Overtime")
         .when(col("hours_worked")>=45 and col("hours_worked")<=60,"Standard Overtime")
         .when(col("hours_worked")<45,"No Overtime").alias("cal"))
 
-    val df2=df.groupBy(col("cal")).count()
+    val df2=df.groupBy(col("cal")).agg(collect_list($"name"))
 
     df2.show()
 
